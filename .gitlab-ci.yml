@@ -15,7 +15,7 @@ variables:
   BASE_IMAGE: 'quay.io/almalinux/8-minimal:8.5'
 
 before_script:
-  - dnf install -y buildah podman skopeo runc qemu-user-binfmt
+  - dnf install -y --nodocs buildah podman skopeo runc qemu-user-binfmt
   - podman run --rm --privileged docker.io/multiarch/qemu-user-static --reset -p yes
   - buildah login -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}" "${CI_REGISTRY}"
   # Newer versions of podman/buildah configured overlayfs mount options when
@@ -28,8 +28,7 @@ Build-container:
     # - buildah login -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}" "${CI_REGISTRY}"
     # Newer versions of podman/buildah configured overlayfs mount options when
     # using the vfs driver, and this causes errors.
-    - sed -i '/^mountopt =.*/d' /etc/containers/storage.conf
-    - >
+    - |
       # if [[ "$CI_COMMIT_BRANCH" == "$CI_DEFAULT_BRANCH" ]]; then
       #  tag=""
       #  echo "Running on default branch '$CI_DEFAULT_BRANCH': tag = 'latest'"
@@ -37,16 +36,16 @@ Build-container:
       #  tag=":$CI_COMMIT_REF_SLUG"
       #  echo "Running on branch '$CI_COMMIT_BRANCH': tag = $tag"
       #fi
-        tag=":$CI_COMMIT_REF_SLUG"
+        tag="${CI_COMMIT_REF_SLUG}"
         echo "Running on branch '$CI_COMMIT_BRANCH': tag = $tag"
 
     - >
         buildah build-using-dockerfile -f ./Dockerfile --override-arch arm64
-          --build-arg BASE_IMAGE="quay.io/almalinux/8-minimal:8.5"
+          --build-arg BASE_IMAGE="${BASE_IMAGE}"
           -t ${CI_REGISTRY_USER}/${CI_REGISTRY}:${tag}-arm64
     - >
         buildah build-using-dockerfile -f ./Dockerfile --override-arch amd64
-          --build-arg BASE_IMAGE="quay.io/almalinux/8-minimal:8.5"
+          --build-arg BASE_IMAGE=${BASE_IMAGE}
           -t ${CI_REGISTRY_USER}/${CI_REGISTRY}:${tag}-amd64
 
   rules:
@@ -57,11 +56,11 @@ Build-container:
 
   after_script:
     # Don't try to use systemd/journald
-    - >
-        cat >> /etc/containers/libpod.conf << END
-        cgroup_manager = "cgroupfs"
-        events_logger = "file"
-        END
+    - |
+      cat >> /etc/containers/libpod.conf << END
+      cgroup_manager = "cgroupfs"
+      events_logger = "file"
+      END
     - buildah inspect --format "{{.FromImageID}}" ${CI_REGISTRY_USER}/${CI_REGISTRY}:${tag}-arm64
     - buildah inspect --format "{{.FromImageID}}" ${CI_REGISTRY_USER}/${CI_REGISTRY}:${tag}-arm64
 
