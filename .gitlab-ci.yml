@@ -70,13 +70,7 @@ Push-container:
     - |
         echo "Running on branch '$CI_COMMIT_BRANCH': tag = $tag"
         tag=":$CI_COMMIT_REF_SLUG"
-    - >
-        buildah manifest create ${CI_REGISTRY_USER}/${CI_REGISTRY}:${tag}
-
-        buildah manifest ${CI_REGISTRY_USER}/${CI_REGISTRY}:${tag}
-          ${CI_REGISTRY_USER}/${CI_REGISTRY}:${tag}-arm64
-
-        buildah manifest ${CI_REGISTRY_USER}/${CI_REGISTRY}:${tag}
-          ${CI_REGISTRY_USER}/${CI_REGISTRY}:${tag}-amd64
-
+    - buildah manifest create ${CI_REGISTRY_USER}/${CI_REGISTRY}:${tag}
+    - buildah manifest ${CI_REGISTRY_USER}/${CI_REGISTRY}:${tag} ${CI_REGISTRY_USER}/${CI_REGISTRY}:${tag}-arm64
+    - buildah manifest ${CI_REGISTRY_USER}/${CI_REGISTRY}:${tag} ${CI_REGISTRY_USER}/${CI_REGISTRY}:${tag}-amd64
     - buildah push "${CI_REGISTRY_USER}/${CI_REGISTRY}:${tag}"
