@@ -39,14 +39,14 @@ Build-container:
         tag="${CI_COMMIT_REF_SLUG}"
         echo "Running on branch '$CI_COMMIT_BRANCH': tag = $tag"
 
-    - >
-        buildah build-using-dockerfile -f ./Dockerfile --override-arch arm64
-          --build-arg BASE_IMAGE="${BASE_IMAGE}"
-          -t ${CI_REGISTRY_USER}/${CI_REGISTRY}:${tag}-arm64
-    - >
-        buildah build-using-dockerfile -f ./Dockerfile --override-arch amd64
-          --build-arg BASE_IMAGE=${BASE_IMAGE}
-          -t ${CI_REGISTRY_USER}/${CI_REGISTRY}:${tag}-amd64
+    - |
+        buildah build-using-dockerfile . -f ./Dockerfile --override-arch arm64 \
+        --build-arg BASE_IMAGE="${BASE_IMAGE}" \
+        -t ${CI_REGISTRY_USER}/${CI_REGISTRY}:${tag}-arm64
+    - |
+        buildah build-using-dockerfile . -f ./Dockerfile --override-arch amd64 \
+        --build-arg BASE_IMAGE=${BASE_IMAGE} \
+        -t ${CI_REGISTRY_USER}/${CI_REGISTRY}:${tag}-amd64
 
   rules:
     - when: 'manual'
