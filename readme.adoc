@@ -1,0 +1,89 @@
+This repo is for building a Docker image
+for troubleshooting in container environments.
+All the tools should run as non-root.
+Below are some use cases for docker-compose.
+Kubernetes would be similar but not totally the same.
+
+*Please be reminded about the security implications of the capabilities being granted.*
+I perform the testing with Podman and K3S.
+
+. For using this image without any extra capabilities (as user "debug")
+.. traceroute -U / --udp
+*** -I (ICMP) is not possible because it needs NET_RAW capability
+.. mtr: -U (UDP), -T (TCP)
+.. telnet, dig, curl, wget, openssl and etc.
++
+. Run this image with net_raw capability
+[source,yaml]
++
+----
+docker-compose:
+    cap_drop:
+      - all
+    cap_add:
+      - net_raw
+
+Kubernetes (Option 1)
+  securityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - all
+      add:
+        - net_raw
+        - net_admin
+
+Kubernetes (Option 2, not recommended)
+  securityContext:
+    # unspecified or set to true
+    # allowPrivilegeEscalation: true
+    # Not recommended because it allows privilege escalation
+    # Implies that the container may execute binaries with setcap configured
+    # Then the privileges may exceed or unbounded by below setting
+    capabilities:
+      drop:
+        - all
+      add:
+        - net_raw
+----
++
+** Then the user "debug" can additionally runs (including the previous step):
+* ping (ICMP)
+* traceroute -I (ICMP)
+
+. Run this image with these capabilities
++
+[source,yaml]
+----
+docker-compose:
+    cap_drop:
+      - all
+    cap_add:
+      - net_raw
+      - net_admin
+
+Kubernetes (my preferred setting)
+  securityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - all
+      add:
+        - net_raw
+        - net_admin
+        - setuid
+        - setgid
+    # Need to run the container as root
+    runAsUser: 0 
+----
++
+* Then the user "debug" can additionally run (including the previous steps):
+** tcpdump
+** If the conatiner is inside Kubernetes, then the user may need to run as root.
+Else the user cannot access the network interface (eth0).
+I am not sure what it is difference from podman.
+
+. Note there are other alternatives for running tcpdump:
+* In the host server, use nsenter to run tcpdump inside the conatiner.
+* Check if the CNI expose an NIC on the host server, then run tcpdump on the host.
+* Using a sidecar container (Kubernetes) to run tcpdump.

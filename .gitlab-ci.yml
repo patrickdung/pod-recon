@@ -1,0 +1,75 @@
+---
+# Use Fedora image for buildah/podman
+image: registry.fedoraproject.org/fedora:35
+stages:
+  - build
+  - push
+variables:
+  # if use Docker
+  # https://docs.gitlab.com/ee/ci/docker/using_docker_build.html#use-the-overlayfs-driver
+  # DOCKER_DRIVER: overlay2
+  # But Buildah can't use 'overlay' driver when running inside docker
+  STORAGE_DRIVER: 'vfs'
+  BUILDAH_FORMAT: 'docker'
+  BUILDAH_ISOLATION: 'chroot'
+  BASE_IMAGE: 'quay.io/almalinux/8-minimal:8.5'
+
+  before_script:
+    - dnf install -y buildah podman skopeo runc qemu-user-binfmt
+    - podman run --rm --privileged docker.io/multiarch/qemu-user-static --reset -p yes
+    - buildah login -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}" "${CI_REGISTRY}"
+    # Newer versions of podman/buildah configured overlayfs mount options when
+    # using the vfs driver, and this causes errors
+    - sed -i '/^mountopt =.*/d' /etc/containers/storage.conf
+
+Build-container:
+  stage: build
+  script:
+    - buildah login -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}" "${CI_REGISTRY}"
+    # Newer versions of podman/buildah configured overlayfs mount options when
+    # using the vfs driver, and this causes errors.
+    - sed -i '/^mountopt =.*/d' /etc/containers/storage.conf
+    - |
+      # if [[ "$CI_COMMIT_BRANCH" == "$CI_DEFAULT_BRANCH" ]]; then
+      #  tag=""
+      #  echo "Running on default branch '$CI_DEFAULT_BRANCH': tag = 'latest'"
+      #else
+      #  tag=":$CI_COMMIT_REF_SLUG"
+      #  echo "Running on branch '$CI_COMMIT_BRANCH': tag = $tag"
+      #fi
+        echo "Running on branch '$CI_COMMIT_BRANCH': tag = $tag"
+        tag=":$CI_COMMIT_REF_SLUG"
+
+    - buildah build-using-dockerfile --override-arch arm64 \
+        -t ${CI_REGISTRY_USER}/${CI_REGISTRY}:${tag}-arm64 -f ./Dockerfile .
+    - buildah build-using-dockerfile --override-arch amd64 \
+        -t ${CI_REGISTRY_USER}/${CI_REGISTRY}:${tag}-amd64 -f ./Dockerfile .
+  rules:
+    - when: 'manual'
+      allow_failure: true
+      exists:
+        - Dockerfile
+
+  after_script:
+    # Don't try to use systemd/journald
+    - |
+        cat >> /etc/containers/libpod.conf << END
+        cgroup_manager = "cgroupfs"
+        events_logger = "file"
+        END
+    - buildah inspect --format "{{.FromImageID}}" ${CI_REGISTRY_USER}/${CI_REGISTRY}:${tag}-arm64
+    - buildah inspect --format "{{.FromImageID}}" ${CI_REGISTRY_USER}/${CI_REGISTRY}:${tag}-arm64
+
+Push-container:
+  stage: push
+  script:
+    - |
+        echo "Running on branch '$CI_COMMIT_BRANCH': tag = $tag"
+        tag=":$CI_COMMIT_REF_SLUG"
+    - |
+        buildah manifest create ${CI_REGISTRY_USER}/${CI_REGISTRY}:${tag}
+        buildah manifest ${CI_REGISTRY_USER}/${CI_REGISTRY}:${tag} \
+          ${CI_REGISTRY_USER}/${CI_REGISTRY}:${tag}-arm64
+        buildah manifest ${CI_REGISTRY_USER}/${CI_REGISTRY}:${tag} \
+          ${CI_REGISTRY_USER}/${CI_REGISTRY}:${tag}-amd64
+    - buildah push "${CI_REGISTRY_USER}/${CI_REGISTRY}:${tag}"
