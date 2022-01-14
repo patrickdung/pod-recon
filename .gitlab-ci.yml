@@ -19,6 +19,7 @@ variables:
   BUILDAH_FORMAT: 'docker'
   BUILDAH_ISOLATION: 'chroot'
   BASE_IMAGE: 'quay.io/almalinux/8-minimal:8.5'
+  tag: "${CI_COMMIT_REF_SLUG}"
 
 before_script:
   - dnf install -y --nodocs --setopt=install_weak_deps=False buildah podman skopeo runc qemu-user-binfmt jq
@@ -42,7 +43,7 @@ build-and-push:
       #  tag=":$CI_COMMIT_REF_SLUG"
       #  echo "Running on branch '$CI_COMMIT_BRANCH': tag = $tag"
       #fi
-        tag="${CI_COMMIT_REF_SLUG}"
+        #tag="${CI_COMMIT_REF_SLUG}"
         echo "Running on branch '$CI_COMMIT_BRANCH': tag = $tag"
 
     - >
@@ -65,7 +66,7 @@ build-and-push:
 
 scan-containers:
   stage: scan-containers
-  # dependencies: ["build-and-push"]
+  dependencies: ["build-and-push"]
   script:
       #echo "::set-output name=container_digest::$(cat /tmp/container-digest-arm64)"
     - >
