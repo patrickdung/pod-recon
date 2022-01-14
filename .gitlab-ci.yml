@@ -23,8 +23,6 @@ variables:
 
 before_script:
   - dnf install -y --nodocs --setopt=install_weak_deps=False buildah podman skopeo runc qemu-user-binfmt jq
-  - podman run --rm --privileged docker.io/multiarch/qemu-user-static --reset -p yes
-  - buildah login -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}" "${CI_REGISTRY}"
   # Newer versions of podman/buildah configured overlayfs mount options when
   # using the vfs driver, and this causes errors
   - sed -i '/^mountopt =.*/d' /etc/containers/storage.conf
@@ -33,6 +31,8 @@ before_script:
     cgroup_manager = "cgroupfs"
     events_logger = "file"
     END
+  - podman run --rm --privileged docker.io/multiarch/qemu-user-static --reset -p yes
+  - buildah login -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}" "${CI_REGISTRY}"
 
 build-and-push:
   stage: build-and-push
