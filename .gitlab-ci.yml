@@ -2,8 +2,13 @@
 # Use Fedora image for buildah/podman
 image: registry.fedoraproject.org/fedora:35
 stages:
-  - build
-  - push
+  - build-containers
+  - push-containers
+rules:
+  - when: 'manual'
+    allow_failure: true
+    exists:
+      - Dockerfile
 variables:
   # if use Docker
   # https://docs.gitlab.com/ee/ci/docker/using_docker_build.html#use-the-overlayfs-driver
@@ -22,8 +27,8 @@ before_script:
   # using the vfs driver, and this causes errors
   - sed -i '/^mountopt =.*/d' /etc/containers/storage.conf
 
-Build-container:
-  stage: build
+build-container:
+  stage: build-containers
   script:
     # - buildah login -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}" "${CI_REGISTRY}"
     # Newer versions of podman/buildah configured overlayfs mount options when
@@ -44,11 +49,11 @@ Build-container:
     - |
         buildah build-using-dockerfile --override-arch amd64 --build-arg BASE_IMAGE=${BASE_IMAGE} -t ${CI_REGISTRY_USER}/${CI_REGISTRY}:${tag}-amd64
 
-  rules:
-    - when: 'manual'
-      allow_failure: true
-      exists:
-        - Dockerfile
+#  rules:
+#    - when: 'manual'
+#      allow_failure: true
+#      exists:
+#        - Dockerfile
 
   after_script:
     # Don't try to use systemd/journald
@@ -59,8 +64,8 @@ Build-container:
       END
     - buildah inspect --format "{{.FromImageID}}" ${CI_REGISTRY_USER}/${CI_REGISTRY}:${tag}
 
-Push-container:
-  stage: push
+push-containers:
+  stage: push-containers
   script:
     - |
         tag="$CI_COMMIT_REF_SLUG"
@@ -68,4 +73,4 @@ Push-container:
     - buildah manifest create ${CI_REGISTRY_USER}/${CI_REGISTRY}:${tag}
     - buildah manifest ${CI_REGISTRY_USER}/${CI_REGISTRY}:${tag} ${CI_REGISTRY_USER}/${CI_REGISTRY}:${tag}-arm64
     - buildah manifest ${CI_REGISTRY_USER}/${CI_REGISTRY}:${tag} ${CI_REGISTRY_USER}/${CI_REGISTRY}:${tag}-amd64
-    - buildah push "${CI_REGISTRY_USER}/${CI_REGISTRY}:${tag}"
+    - buildah push ${CI_REGISTRY_USER}/${CI_REGISTRY}:${tag}
