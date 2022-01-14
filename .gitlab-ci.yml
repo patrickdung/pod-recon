@@ -97,15 +97,16 @@ scan-containers:
   stage: scan-containers
   dependencies: ["build-and-push"]
   script:
-    - export container_digest_arm64 = $(cat ./container-digest-arm64)
-    - export container_digest_amd64 = $(cat ./container-digest-amd64)
+    - export container_digest_arm64=$(cat ./container-digest-arm64)
+    - export container_digest_amd64=$(cat ./container-digest-amd64)
+    # The digest contains 'sha256:' in the beginning
     - >
       podman run -it docker.io/anchore/grype:latest
-      ${CI_REGISTRY_IMAGE}@sha256:${container_digest_arm64}
+      ${CI_REGISTRY_IMAGE}@${container_digest_arm64}
       > ./arm64-container-vulnerabilities-report-grype.json
     - >
       podman run -it docker.io/anchore/grype:latest
-      ${CI_REGISTRY_IMAGE}@sha256:${container_digest_amd64}
+      ${CI_REGISTRY_IMAGE}@${container_digest_amd64}
       > ./amd64-container-vulnerabilities-report-grype.json
 
   artifacts:
