@@ -15,7 +15,7 @@ variables:
   BASE_IMAGE: 'quay.io/almalinux/8-minimal:8.5'
 
 before_script:
-  - dnf install -y --nodocs buildah podman skopeo runc qemu-user-binfmt
+  - dnf install -y --nodocs --setopt=install_weak_deps=False buildah podman skopeo runc qemu-user-binfmt
   - podman run --rm --privileged docker.io/multiarch/qemu-user-static --reset -p yes
   - buildah login -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}" "${CI_REGISTRY}"
   # Newer versions of podman/buildah configured overlayfs mount options when
@@ -57,15 +57,14 @@ Build-container:
       cgroup_manager = "cgroupfs"
       events_logger = "file"
       END
-    - buildah inspect --format "{{.FromImageID}}" ${CI_REGISTRY_USER}/${CI_REGISTRY}:${tag}-arm64
-    - buildah inspect --format "{{.FromImageID}}" ${CI_REGISTRY_USER}/${CI_REGISTRY}:${tag}-arm64
+    - buildah inspect --format "{{.FromImageID}}" ${CI_REGISTRY_USER}/${CI_REGISTRY}:${tag}
 
 Push-container:
   stage: push
   script:
     - |
-        echo "Running on branch '$CI_COMMIT_BRANCH': tag = $tag"
         tag="$CI_COMMIT_REF_SLUG"
+        echo "Running on branch '$CI_COMMIT_BRANCH': tag = $tag"
     - buildah manifest create ${CI_REGISTRY_USER}/${CI_REGISTRY}:${tag}
     - buildah manifest ${CI_REGISTRY_USER}/${CI_REGISTRY}:${tag} ${CI_REGISTRY_USER}/${CI_REGISTRY}:${tag}-arm64
     - buildah manifest ${CI_REGISTRY_USER}/${CI_REGISTRY}:${tag} ${CI_REGISTRY_USER}/${CI_REGISTRY}:${tag}-amd64
