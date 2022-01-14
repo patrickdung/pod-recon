@@ -15,15 +15,12 @@ variables:
   # https://docs.gitlab.com/ee/ci/docker/using_docker_build.html#use-the-overlayfs-driver
   # DOCKER_DRIVER: overlay2
   # But Buildah can't use 'overlay' driver when running inside docker
-  #STORAGE_DRIVER: 'vfs'
-  STORAGE_DRIVER: 'overlay2'
+  STORAGE_DRIVER: 'vfs'
   BUILDAH_FORMAT: 'docker'
   BUILDAH_ISOLATION: 'chroot'
   BASE_IMAGE: 'quay.io/almalinux/8-minimal:8.5'
 
 before_script:
-  - ls -lR /lib/modules
-  - /usr/sbin/modprobe overlay
   - dnf install -y --nodocs --setopt=install_weak_deps=False buildah podman skopeo runc qemu-user-binfmt
   - podman run --rm --privileged docker.io/multiarch/qemu-user-static --reset -p yes
   - buildah login -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}" "${CI_REGISTRY}"
@@ -65,9 +62,9 @@ build-container:
 
   after_script:
     # Don't try to use systemd/journald
-    - |
-      cat >> /etc/containers/libpod.conf << END
-      cgroup_manager = "cgroupfs"
-      events_logger = "file"
-      END
+    #- |
+    #  cat >> /etc/containers/libpod.conf << END
+    #  cgroup_manager = "cgroupfs"
+    #  events_logger = "file"
+    #  END
     - buildah inspect ${CI_REGISTRY_IMAGE}:${tag}
