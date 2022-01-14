@@ -57,8 +57,9 @@ build-and-push:
     - buildah manifest create ${CI_REGISTRY_IMAGE}:${tag}
     - buildah manifest add ${CI_REGISTRY_IMAGE}:${tag} localhost/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}:${tag}-arm64
     - buildah manifest add ${CI_REGISTRY_IMAGE}:${tag} localhost/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}:${tag}-amd64
-    - buildah push --format v2s2 ${CI_REGISTRY_IMAGE}:${tag}
-    - buildah inspect ${CI_REGISTRY_IMAGE}:${tag}
+    - buildah push --format v2s2 --all ${CI_REGISTRY_IMAGE}:${tag}
+    # - buildah inspect ${CI_REGISTRY_IMAGE}:${tag}
+    - skopeo inspect --raw docker://${CI_REGISTRY_IMAGE}:${tag} | jq
 
 #  rules:
 #    - when: 'manual'
