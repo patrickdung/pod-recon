@@ -53,18 +53,10 @@ build-container:
     - buildah manifest add ${CI_REGISTRY_IMAGE}:${tag} ${CI_REGISTRY_IMAGE}:${tag}-arm64
     - buildah manifest add ${CI_REGISTRY_IMAGE}:${tag} ${CI_REGISTRY_IMAGE}:${tag}-amd64
     - buildah push ${CI_REGISTRY_IMAGE}:${tag}
+    - buildah inspect ${CI_REGISTRY_IMAGE}:${tag}
 
 #  rules:
 #    - when: 'manual'
 #      allow_failure: true
 #      exists:
 #        - Dockerfile
-
-  after_script:
-    # Don't try to use systemd/journald
-    #- |
-    #  cat >> /etc/containers/libpod.conf << END
-    #  cgroup_manager = "cgroupfs"
-    #  events_logger = "file"
-    #  END
-    - buildah inspect ${CI_REGISTRY_IMAGE}:${tag}
