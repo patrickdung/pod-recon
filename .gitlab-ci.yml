@@ -1,10 +1,10 @@
 ---
 # Use Fedora image for buildah/podman
 image: registry.fedoraproject.org/fedora:35
-#stages:
-  #- build-containers
-  #- push-containers
-#rules:
+stages:
+  - build-and-push
+  - scan-containers
+# rules:
 #  - when: 'manual'
 #    allow_failure: true
 #    exists:
@@ -21,15 +21,15 @@ variables:
   BASE_IMAGE: 'quay.io/almalinux/8-minimal:8.5'
 
 before_script:
-  - dnf install -y --nodocs --setopt=install_weak_deps=False buildah podman skopeo runc qemu-user-binfmt
+  - dnf install -y --nodocs --setopt=install_weak_deps=False buildah podman skopeo runc qemu-user-binfmt jq
   - podman run --rm --privileged docker.io/multiarch/qemu-user-static --reset -p yes
   - buildah login -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}" "${CI_REGISTRY}"
   # Newer versions of podman/buildah configured overlayfs mount options when
   # using the vfs driver, and this causes errors
   - sed -i '/^mountopt =.*/d' /etc/containers/storage.conf
 
-build-container:
-  #stage: build-containers
+build-and-push:
+  stage: build-and-push
   script:
     # - buildah login -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}" "${CI_REGISTRY}"
     # Newer versions of podman/buildah configured overlayfs mount options when
@@ -45,10 +45,12 @@ build-container:
         tag="${CI_COMMIT_REF_SLUG}"
         echo "Running on branch '$CI_COMMIT_BRANCH': tag = $tag"
 
-    - |
-        buildah build-using-dockerfile --override-arch arm64 --build-arg BASE_IMAGE="${BASE_IMAGE}" -t ${CI_REGISTRY_IMAGE}:${tag}-arm64
-    - |
-        buildah build-using-dockerfile --override-arch amd64 --build-arg BASE_IMAGE="${BASE_IMAGE}" -t ${CI_REGISTRY_IMAGE}:${tag}-amd64
+    - >
+      buildah build-using-dockerfile --override-arch arm64
+      --build-arg BASE_IMAGE="${BASE_IMAGE}" -t ${CI_REGISTRY_IMAGE}:${tag}-arm64
+    - >
+      buildah build-using-dockerfile --override-arch amd64
+      --build-arg BASE_IMAGE="${BASE_IMAGE}" -t ${CI_REGISTRY_IMAGE}:${tag}-amd64
     - buildah manifest create ${CI_REGISTRY_IMAGE}:${tag}
     - buildah manifest add ${CI_REGISTRY_IMAGE}:${tag} ${CI_REGISTRY_IMAGE}:${tag}-arm64
     - buildah manifest add ${CI_REGISTRY_IMAGE}:${tag} ${CI_REGISTRY_IMAGE}:${tag}-amd64
@@ -60,3 +62,13 @@ build-container:
 #      allow_failure: true
 #      exists:
 #        - Dockerfile
+
+scan-containers:
+  stage: scan-containers
+  dependencies: build-and-push
+  script:
+    - >
+      skopeo inspect --raw docker://${CI_REGISTRY_IMAGE}:${tag}
+      jq -r '.manifests[] | select(.platform .architecture=="arm64" and .platform .os=="linux") | .digest' > /tmp/container-digest-arm64
+      #echo "::set-output name=container_digest::$(cat /tmp/container-digest-arm64)"
+    - podman run -it docker.io/anchore/grype:latest ${CI_REGISTRY_IMAGE}:${tag}
