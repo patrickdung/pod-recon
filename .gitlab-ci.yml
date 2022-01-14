@@ -55,7 +55,7 @@ build-and-push:
     - buildah manifest create ${CI_REGISTRY_IMAGE}:${tag}
     - buildah manifest add ${CI_REGISTRY_IMAGE}:${tag} ${CI_REGISTRY_IMAGE}:${tag}-arm64
     - buildah manifest add ${CI_REGISTRY_IMAGE}:${tag} ${CI_REGISTRY_IMAGE}:${tag}-amd64
-    - buildah push ${CI_REGISTRY_IMAGE}:${tag}
+    - buildah push --format v2s2 ${CI_REGISTRY_IMAGE}:${tag}
     - buildah inspect ${CI_REGISTRY_IMAGE}:${tag}
 
 #  rules:
@@ -68,8 +68,17 @@ scan-containers:
   stage: scan-containers
   dependencies: ["build-and-push"]
   script:
-      #echo "::set-output name=container_digest::$(cat /tmp/container-digest-arm64)"
-    - skopeo inspect --raw docker://${CI_REGISTRY_IMAGE}:${tag}
-    - |
-      skopeo inspect --raw docker://${CI_REGISTRY_IMAGE}:${tag} | jq -r '.manifests[] | select(.platform .architecture=="arm64" and .platform .os=="linux") | .digest' > /tmp/container-digest-arm64
-    - podman run -it docker.io/anchore/grype:latest ${CI_REGISTRY_IMAGE}:${tag}
+    # - skopeo inspect --raw docker://${CI_REGISTRY_IMAGE}:${tag}
+    - skopeo inspect --raw docker://${CI_REGISTRY_IMAGE}:${tag} | jq -r '.manifests[] | select(.platform .architecture=="arm64" and .platform .os=="linux") | .digest' > /tmp/container-digest-arm64
+    - skopeo inspect --raw docker://${CI_REGISTRY_IMAGE}:${tag} | jq -r '.manifests[] | select(.platform .architecture=="amd64" and .platform .os=="linux") | .digest' > /tmp/container-digest-amd64
+    - export container_digest_arm64=$(cat /tmp/container-digest-arm64)
+    - export container_digest_amd64=$(cat /tmp/container-digest-amd64)
+      
+    - podman run -it docker.io/anchore/grype:latest ${CI_REGISTRY_IMAGE}@:${container_digest_arm64} > /tmp/arm64-container-vulnerabilities-report-grype.json
+    - podman run -it docker.io/anchore/grype:latest ${CI_REGISTRY_IMAGE}@:${container_digest_amd64} > /tmp/amd64-container-vulnerabilities-report-grype.json
+
+  artifacts:
+     expire_in: 1 hour
+     paths:
+       - /tmp/container-digest-arm64
+       - /tmp/container-digest-amd64
