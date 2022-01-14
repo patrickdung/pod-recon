@@ -27,7 +27,7 @@ before_script:
   # using the vfs driver, and this causes errors
   - sed -i '/^mountopt =.*/d' /etc/containers/storage.conf
   - |
-    cat >> /etc/containers/containes.conf << END
+    cat >> /etc/containers/containers.conf << END
     cgroup_manager = "cgroupfs"
     events_logger = "file"
     END
