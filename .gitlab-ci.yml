@@ -116,21 +116,21 @@ scan-containers:
     - |
       curl -L -O -v https://github.com/anchore/grype/releases/download/v${GRYPE_VERSION}/grype_${GRYPE_VERSION}_linux_amd64.rpm
       curl -L -O -v https://github.com/anchore/grype/releases/download/v${GRYPE_VERSION}/grype_${GRYPE_VERSION}_checksums.txt
-      sha256sum -c grype_${env.GRYPE_VERSION}_checksums.txt --ignore-missing
-      sudo rpm -ivh grype_${env.GRYPE_VERSION}_linux_amd64.rpm
+      sha256sum -c grype_${GRYPE_VERSION}_checksums.txt --ignore-missing
+      sudo rpm -ivh grype_${GRYPE_VERSION}_linux_amd64.rpm
 
     - |
       curl -L -O -v https://github.com/anchore/syft/releases/download/v${SYFT_VERSION}/syft_${SYFT_VERSION}_linux_amd64.rpm
       curl -L -O -v https://github.com/anchore/syft/releases/download/v${SYFT_VERSION}/syft_${SYFT_VERSION}_checksums.txt
-      sha256sum -c syft_${env.SYFT_VERSION}_checksums.txt --ignore-missing
-      sudo rpm -ivh syft_${env.SYFT_VERSION}_linux_amd64.rpm
+      sha256sum -c syft_${SYFT_VERSION}_checksums.txt --ignore-missing
+      sudo rpm -ivh syft_${SYFT_VERSION}_linux_amd64.rpm
 
     - grype -o table ${CI_REGISTRY_IMAGE}@${container_digest_arm64} > ./arm64-container-vulnerabilities-report-grype-table.txt
     - grype -o table ${CI_REGISTRY_IMAGE}@${container_digest_amd64} > ./amd64-container-vulnerabilities-report-grype-table.txt
 
-artifacts:
-  expose_as: 'Grype scanning reports'
-  # Then can't use * when expose_as is used
-  paths:
-    - ./arm64-container-vulnerabilities-report-grype-table.txt
-    - ./amd64-container-vulnerabilities-report-grype-table.txt
+  artifacts:
+    expose_as: 'Grype scanning reports'
+    # Then can't use * when expose_as is used
+    paths:
+      - ./arm64-container-vulnerabilities-report-grype-table.txt
+      - ./amd64-container-vulnerabilities-report-grype-table.txt
