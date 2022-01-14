@@ -1,6 +1,6 @@
 ---
 # Use Fedora image for buildah/podman
-image: registry.fedoraproject.org/fedora:34
+image: registry.fedoraproject.org/fedora:32
 stages:
   - build-and-push
   - scan-containers
