@@ -107,5 +107,7 @@ scan-containers:
 
   artifacts:
     expose_as: 'Grype scanning reports'
+    # Then can't use * when expose_as is used
     paths:
-      - /tmp/*-container-vulnerabilities-report-grype.json
+      - /tmp/arm64-container-vulnerabilities-report-grype.json
+      - /tmp/amd64-container-vulnerabilities-report-grype.json
