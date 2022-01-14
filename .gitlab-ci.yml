@@ -75,8 +75,11 @@ build-and-push:
     - skopeo inspect --raw docker://${CI_REGISTRY_IMAGE}:${tag} | jq
     - skopeo inspect --raw docker://${CI_REGISTRY_IMAGE}:${tag} | jq -r '.manifests[] | select(.platform .architecture=="arm64" and .platform .os=="linux") | .digest' > /tmp/container-digest-arm64
     - skopeo inspect --raw docker://${CI_REGISTRY_IMAGE}:${tag} | jq -r '.manifests[] | select(.platform .architecture=="amd64" and .platform .os=="linux") | .digest' > /tmp/container-digest-amd64
+    - ls -la /tmp
     - export container_digest_arm64=$(cat /tmp/container-digest-arm64)
     - export container_digest_amd64=$(cat /tmp/container-digest-amd64)
+    - echo ${container_digest_arm64
+    - echo ${container_digest_amd64}
 
   artifacts:
     expire_in: 1 hour
