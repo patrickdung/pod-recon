@@ -65,7 +65,7 @@ build-and-push:
 
 scan-containers:
   stage: scan-containers
-  dependencies: build-and-push
+  dependencies: ["build-and-push"]
   script:
     - >
       skopeo inspect --raw docker://${CI_REGISTRY_IMAGE}:${tag}
