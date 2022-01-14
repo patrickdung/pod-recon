@@ -69,7 +69,7 @@ scan-containers:
   dependencies: ["build-and-push"]
   script:
       #echo "::set-output name=container_digest::$(cat /tmp/container-digest-arm64)"
-    - >
-      skopeo inspect --raw docker://${CI_REGISTRY_IMAGE}:${tag}
-      | jq -r '.manifests[] | select(.platform .architecture=="arm64" and .platform .os=="linux") | .digest' > /tmp/container-digest-arm64
+    - skopeo inspect --raw docker://${CI_REGISTRY_IMAGE}:${tag}
+    - |
+      skopeo inspect --raw docker://${CI_REGISTRY_IMAGE}:${tag} | jq -r '.manifests[] | select(.platform .architecture=="arm64" and .platform .os=="linux") | .digest' > /tmp/container-digest-arm64
     - podman run -it docker.io/anchore/grype:latest ${CI_REGISTRY_IMAGE}:${tag}
