@@ -28,6 +28,11 @@ before_script:
   # Newer versions of podman/buildah configured overlayfs mount options when
   # using the vfs driver, and this causes errors
   - sed -i '/^mountopt =.*/d' /etc/containers/storage.conf
+  - |
+    cat >> /etc/containers/libpod.conf << END
+    cgroup_manager = "cgroupfs"
+    events_logger = "file"
+    END
 
 build-and-push:
   stage: build-and-push
