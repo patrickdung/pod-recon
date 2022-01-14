@@ -22,7 +22,7 @@ variables:
   tag: "${CI_COMMIT_REF_SLUG}"
 
 before_script:
-  - dnf install -y --nodocs --setopt=install_weak_deps=False buildah podman skopeo runc qemu-user-binfmt jq
+  - dnf install -y --nodocs --setopt=install_weak_deps=False buildah podman skopeo runc qemu-user-binfmt jq curl
   # Newer versions of podman/buildah configured overlayfs mount options when
   # using the vfs driver, and this causes errors
   - sed -i '/^mountopt =.*/d' /etc/containers/storage.conf
@@ -100,18 +100,37 @@ scan-containers:
     - export container_digest_arm64=$(cat ./container-digest-arm64)
     - export container_digest_amd64=$(cat ./container-digest-amd64)
     # The digest contains 'sha256:' in the beginning
-    - >
-      podman run -it docker.io/anchore/grype:latest
-      ${CI_REGISTRY_IMAGE}@${container_digest_arm64}
-      > ./arm64-container-vulnerabilities-report-grype.json
-    - >
-      podman run -it docker.io/anchore/grype:latest
-      ${CI_REGISTRY_IMAGE}@${container_digest_amd64}
-      > ./amd64-container-vulnerabilities-report-grype.json
+    # Cannot run grype container in GL CI (already DinD?)
+    #- >
+    #  podman run -it docker.io/anchore/grype:latest
+    #  ${CI_REGISTRY_IMAGE}@${container_digest_arm64}
+    #  > ./arm64-container-vulnerabilities-report-grype.txt
+    - |
+      curl -sL https://api.github.com/repos/anchore/grype/releases | jq -r ".[].tag_name" | grep -v rc | sort -nr -t. -k 1 -k 2 -k 3 | head -n 1 | sed -E 's|^v||' > /tmp/grype-latest-branch-name
+      export GRYPE_VERSION=$(cat /tmp/grype-latest-branch-name)
 
-  artifacts:
-    expose_as: 'Grype scanning reports'
-    # Then can't use * when expose_as is used
-    paths:
-      - ./arm64-container-vulnerabilities-report-grype.json
-      - ./amd64-container-vulnerabilities-report-grype.json
+    - |
+      curl -sL https://api.github.com/repos/anchore/syft/releases | jq -r ".[].tag_name" | grep -v rc | sort -nr -t. -k 1 -k 2 -k 3 | head -n 1 | sed -E 's|^v||' > /tmp/syft-latest-branch-name
+      export SYFT_VERSION=$(cat /tmp/syft-latest-branch-name)
+
+    - |
+      curl -L -O -v https://github.com/anchore/grype/releases/download/v${GRYPE_VERSION}/grype_${GRYPE_VERSION}_linux_amd64.rpm
+      curl -L -O -v https://github.com/anchore/grype/releases/download/v${GRYPE_VERSION}/grype_${GRYPE_VERSION}_checksums.txt
+      sha256sum -c grype_${env.GRYPE_VERSION}_checksums.txt --ignore-missing
+      sudo rpm -ivh grype_${env.GRYPE_VERSION}_linux_amd64.rpm
+
+    - |
+      curl -L -O -v https://github.com/anchore/syft/releases/download/v${SYFT_VERSION}/syft_${SYFT_VERSION}_linux_amd64.rpm
+      curl -L -O -v https://github.com/anchore/syft/releases/download/v${SYFT_VERSION}/syft_${SYFT_VERSION}_checksums.txt
+      sha256sum -c syft_${env.SYFT_VERSION}_checksums.txt --ignore-missing
+      sudo rpm -ivh syft_${env.SYFT_VERSION}_linux_amd64.rpm
+
+    - grype -o table ${CI_REGISTRY_IMAGE}@${container_digest_arm64} > ./arm64-container-vulnerabilities-report-grype-table.txt
+    - grype -o table ${CI_REGISTRY_IMAGE}@${container_digest_amd64} > ./amd64-container-vulnerabilities-report-grype-table.txt
+
+artifacts:
+  expose_as: 'Grype scanning reports'
+  # Then can't use * when expose_as is used
+  paths:
+    - ./arm64-container-vulnerabilities-report-grype-table.txt
+    - ./amd64-container-vulnerabilities-report-grype-table.txt
