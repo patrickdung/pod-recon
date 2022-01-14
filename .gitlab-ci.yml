@@ -2,13 +2,14 @@
 # Use Fedora image for buildah/podman
 image: registry.fedoraproject.org/fedora:35
 stages:
-  - build-containers
-  - push-containers
-rules:
-  - when: 'manual'
-    allow_failure: true
-    exists:
-      - Dockerfile
+  - build:build-containers
+  - build:push-containers
+#rules:
+#  - when: 'manual'
+#    allow_failure: true
+#    exists:
+#      - Dockerfile
+
 variables:
   # if use Docker
   # https://docs.gitlab.com/ee/ci/docker/using_docker_build.html#use-the-overlayfs-driver
@@ -28,7 +29,7 @@ before_script:
   - sed -i '/^mountopt =.*/d' /etc/containers/storage.conf
 
 build-container:
-  stage: build-containers
+  stage: build:build-containers
   script:
     # - buildah login -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}" "${CI_REGISTRY}"
     # Newer versions of podman/buildah configured overlayfs mount options when
@@ -65,7 +66,7 @@ build-container:
     - buildah inspect --format "{{.FromImageID}}" ${CI_REGISTRY_USER}/${CI_REGISTRY}:${tag}
 
 push-containers:
-  stage: push-containers
+  stage: build:push-containers
   script:
     - |
         tag="$CI_COMMIT_REF_SLUG"
