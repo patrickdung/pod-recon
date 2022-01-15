@@ -36,7 +36,8 @@ before_script:
     cgroup_manager = "cgroupfs"
     events_logger = "file"
     EOF
-  - cat >> /etc/containers/storage.conf << EOF
+  - |
+    cat >> /etc/containers/storage.conf << EOF
     [storage.options.overlay]
     mount_program = "/usr/bin/fuse-overlayfs"
     EOF
