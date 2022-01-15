@@ -195,12 +195,12 @@ scan-containers-and-gen-sbom:
       sudo rpm -ivh syft_${SYFT_VERSION}_linux_amd64.rpm
 
     # Scan by Grype
-    - grype -o table ${CI_REGISTRY_IMAGE}@${container_digest_arm64} > ./arm64-container-vulnerabilities-report-grype-table.txt
-    - grype -o table ${CI_REGISTRY_IMAGE}@${container_digest_amd64} > ./amd64-container-vulnerabilities-report-grype-table.txt
+    - grype -o table registry:${CI_REGISTRY_IMAGE}@${container_digest_arm64} > ./arm64-container-vulnerabilities-report-grype-table.txt
+    - grype -o table registry:${CI_REGISTRY_IMAGE}@${container_digest_amd64} > ./amd64-container-vulnerabilities-report-grype-table.txt
 
     # Generate SBOM
-    - syft -v ${CI_REGISTRY_IMAGE}@${container_digest_arm64} -o json > ./arm64-container-sbom.json
-    - syft -v ${CI_REGISTRY_IMAGE}@${container_digest_amd64} -o json > ./amd64-container-sbom.json
+    - syft -v registry:${CI_REGISTRY_IMAGE}@${container_digest_arm64} -o json > ./arm64-container-sbom.json
+    - syft -v registry:${CI_REGISTRY_IMAGE}@${container_digest_amd64} -o json > ./amd64-container-sbom.json
 
     # Upload artifiacts
     - 'curl --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file ./arm64-container-vulnerabilities-report-grype-table.txt "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/reports/${tag}/arm64-container-vulnerabilities-report-grype-table.txt"'
