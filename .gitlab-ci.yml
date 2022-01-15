@@ -134,7 +134,7 @@ sign-containers:
 
     # Fetch the latest version of the applications
     - |
-      curl -sL https://api.github.com/repos/sigstore/cosign/releases | jq -r ".[].tag_name" | grep -v rc | sort -nr -t. -k 1 -k 2 -k 3 | head -n 1 | sed -E 's|^v||' > /tmp/cosign-latest-branch-name
+      curl -sL https://api.github.com/repos/sigstore/cosign/releases | jq -r ".[].tag_name" | grep -v rc | sort -r -t. -k 1 -k 2 -k 3 | head -n 1 | sed -E 's|^v||' > /tmp/cosign-latest-branch-name
       export COSIGN_VERSION=$(cat /tmp/cosign-latest-branch-name)
 
     # Install Cosign
@@ -166,10 +166,10 @@ scan-containers-and-gen-sbom:
 
     # Fetch the latest version of the applications
     - |
-      curl -sL https://api.github.com/repos/anchore/grype/releases | jq -r ".[].tag_name" | grep -v rc | sort -nr -t. -k 1 -k 2 -k 3 | head -n 1 | sed -E 's|^v||' > /tmp/grype-latest-branch-name
+      curl -sL https://api.github.com/repos/anchore/grype/releases | jq -r ".[].tag_name" | grep -v rc | sort -r -t. -k 1 -k 2 -k 3 | head -n 1 | sed -E 's|^v||' > /tmp/grype-latest-branch-name
       export GRYPE_VERSION=$(cat /tmp/grype-latest-branch-name)
     - |
-      curl -sL https://api.github.com/repos/anchore/syft/releases | jq -r ".[].tag_name" | grep -v rc | sort -nr -t. -k 1 -k 2 -k 3 | head -n 1 | sed -E 's|^v||' > /tmp/syft-latest-branch-name
+      curl -sL https://api.github.com/repos/anchore/syft/releases | jq -r ".[].tag_name" | grep -v rc | sort -r -t. -k 1 -k 2 -k 3 | head -n 1 | sed -E 's|^v||' > /tmp/syft-latest-branch-name
       export SYFT_VERSION=$(cat /tmp/syft-latest-branch-name)
 
     # Install Grype
@@ -221,7 +221,7 @@ attest-sbom:
 
     # Fetch the latest version of the applications
     - |
-      curl -sL https://api.github.com/repos/sigstore/cosign/releases | jq -r ".[].tag_name" | grep -v rc | sort -nr -t. -k 1 -k 2 -k 3 | head -n 1 | sed -E 's|^v||' > /tmp/cosign-latest-branch-name
+      curl -sL https://api.github.com/repos/sigstore/cosign/releases | jq -r ".[].tag_name" | grep -v rc | sort -r -t. -k 1 -k 2 -k 3 | head -n 1 | sed -E 's|^v||' > /tmp/cosign-latest-branch-name
       export COSIGN_VERSION=$(cat /tmp/cosign-latest-branch-name)
 
     # Install Cosign
