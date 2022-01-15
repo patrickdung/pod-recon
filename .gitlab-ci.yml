@@ -11,11 +11,11 @@ stages:
   - upload-artifacts
   - release
 
-rules:
+#rules:
     #  allow_failure: true
     # when: 'manual'
-  - if: $CI_COMMIT_REF_SLUG == "main"
-    when: never
+#  - if: $CI_COMMIT_REF_SLUG == "main"
+#    when: never
 
 variables:
   # if use Docker
@@ -53,6 +53,9 @@ before_script:
 
 build-and-push:
   stage: build-and-push
+  rules:
+    - if: $CI_COMMIT_REF_SLUG == "main"
+      when: never
   script:
     # - buildah login -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}" "${CI_REGISTRY}"
     # Newer versions of podman/buildah configured overlayfs mount options when
