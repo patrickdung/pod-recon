@@ -82,7 +82,7 @@ build-and-push:
     - echo ${container_digest_arm64}
     - echo ${container_digest_amd64}
 
-  artifacts:
+  rtifacts:
     expire_in: 1 hour
     paths:
       - ./container-digest-arm64
@@ -131,8 +131,8 @@ scan-containers:
     - syft -v ${CI_REGISTRY_IMAGE}@${container_digest_arm64} -o json > ./arm64-container-sbom.json
     - syft -v ${CI_REGISTRY_IMAGE}@${container_digest_amd64} -o json > ./amd64-container-sbom.json
 
-    - curl --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file ./arm64-container-vulnerabilities-report-grype-table.txt ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/reports/${tag}/arm64-container-vulnerabilities-report-grype-table.txt
-    - curl --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file ./amd64-container-vulnerabilities-report-grype-table.txt ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/reports/${tag}/amd64-container-vulnerabilities-report-grype-table.txt
+    # - curl --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file ./arm64-container-vulnerabilities-report-grype-table.txt "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/reports/${tag}/arm64-container-vulnerabilities-report-grype-table.txt"
+    # - curl --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file ./amd64-container-vulnerabilities-report-grype-table.txt "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/reports/${tag}/amd64-container-vulnerabilities-report-grype-table.txt"
 
   artifacts:
     expose_as: 'Grype scanning reports'
