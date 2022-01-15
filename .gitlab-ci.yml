@@ -54,8 +54,7 @@ before_script:
 build-and-push:
   stage: build-and-push
   rules:
-    - if: $CI_COMMIT_BRANCH == "main"
-      when: never
+    - if: $CI_COMMIT_BRANCH != "main"
   script:
   # - buildah login -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}" "${CI_REGISTRY}"
   # Newer versions of podman/buildah configured overlayfs mount options when
@@ -119,8 +118,7 @@ build-and-push:
 scan-containers:
   stage: scan-containers
   rules:
-    - if: $CI_COMMIT_BRANCH == "main"
-      when: never
+    - if: $CI_COMMIT_BRANCH != "main"
   dependencies: ["build-and-push"]
   script:
 
@@ -185,8 +183,7 @@ release:
   # image: registry.gitlab.com/gitlab-org/release-cli:latest
   rules:
     # - if: $CI_COMMIT_TAG
-    - if: $CI_COMMIT_BRANCH == "main"
-      when: never
+    - if: $CI_COMMIT_BRANCH != "main"
   script:
     - echo "Running release job"
   release:
