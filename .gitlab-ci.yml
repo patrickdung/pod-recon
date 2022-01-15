@@ -37,10 +37,12 @@ before_script:
     events_logger = "file"
     EOF
   - |
-    cat >> /etc/containers/storage.conf << EOF
-    [storage.options.overlay]
-    mount_program = "/usr/bin/fuse-overlayfs"
-    EOF
+    #cat >> /etc/containers/storage.conf << EOF
+    #[storage.options.overlay]
+    #mount_program = "/usr/bin/fuse-overlayfs"
+    #EOF
+    sed -i -E -e 's|#mount_program = "/usr/bin/fuse-overlayfs"|mount_program = "/usr/bin/fuse-overlayfs"|' /etc/containers/storage.conf
+
   - podman run --rm --privileged docker.io/multiarch/qemu-user-static --reset -p yes
   - buildah login -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}" "${CI_REGISTRY}"
 
