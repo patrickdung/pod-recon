@@ -82,7 +82,7 @@ build-and-push:
     - echo ${container_digest_arm64}
     - echo ${container_digest_amd64}
 
-  rtifacts:
+  artifacts:
     expire_in: 1 hour
     paths:
       - ./container-digest-arm64
