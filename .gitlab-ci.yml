@@ -10,6 +10,11 @@ stages:
   - scan-containers
   - release
 
+only:
+  refs:
+    - api
+    - web
+
 #rules:
     #  allow_failure: true
     # when: 'manual'
