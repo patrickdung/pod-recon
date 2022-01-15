@@ -10,9 +10,6 @@ stages:
   - scan-containers
   - release
 
-script:
-  - echo "Starting the build"
-
 #rules:
     #  allow_failure: true
     # when: 'manual'
