@@ -145,7 +145,7 @@ sign-containers:
       chmod 755 ./cosign-linux-amd64
 
     # Sign container images recursively by cosign
-    - echo -n "${COSIGN_PRIVATE_KEY_PASSWORD}" | ./cosign-linux-amd64 sign --recursive --key <(echo -n "${COSIGN_PRIVATE_KEY }") ${CI_REGISTRY_IMAGE}:${tag}
+    - echo -n "${COSIGN_PRIVATE_KEY_PASSWORD}" | ./cosign-linux-amd64 sign --recursive --key <(echo -n "${COSIGN_PRIVATE_KEY}") ${CI_REGISTRY_IMAGE}:${tag}
 
 scan-containers-and-gen-sbom:
   stage: scan-containers-and-gen-sbom
@@ -232,8 +232,8 @@ attest-sbom:
       chmod 755 ./cosign-linux-amd64
 
     # Create SBOM attestation and push it to the container registry
-    - echo -n "${COSIGN_PRIVATE_KEY_PASSWORD}" | ./cosign-linux-amd64 attest --predicate ./arm64-container-sbom.json --key <(echo -n "${COSIGN_PRIVATE_KEY }") ${CI_REGISTRY_IMAGE}@${container_digest_arm64}
-    - echo -n "${COSIGN_PRIVATE_KEY_PASSWORD}" | ./cosign-linux-amd64 attest --predicate ./amd64-container-sbom.json --key <(echo -n "${COSIGN_PRIVATE_KEY }") ${CI_REGISTRY_IMAGE}@${container_digest_amd64}
+    - echo -n "${COSIGN_PRIVATE_KEY_PASSWORD}" | ./cosign-linux-amd64 attest --predicate ./arm64-container-sbom.json --key <(echo -n "${COSIGN_PRIVATE_KEY}") ${CI_REGISTRY_IMAGE}@${container_digest_arm64}
+    - echo -n "${COSIGN_PRIVATE_KEY_PASSWORD}" | ./cosign-linux-amd64 attest --predicate ./amd64-container-sbom.json --key <(echo -n "${COSIGN_PRIVATE_KEY}") ${CI_REGISTRY_IMAGE}@${container_digest_amd64}
 
 release:
   stage: release
