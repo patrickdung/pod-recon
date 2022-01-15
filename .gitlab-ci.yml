@@ -98,15 +98,15 @@ scan-containers:
   stage: scan-containers
   dependencies: ["build-and-push"]
   script:
-    - |
-      export container_digest_arm64=$(cat ./container-digest-arm64)
-      export container_digest_amd64=$(cat ./container-digest-amd64)
+    - export container_digest_arm64=$(cat ./container-digest-arm64)
+    - export container_digest_amd64=$(cat ./container-digest-amd64)
       # The digest contains 'sha256:' in the beginning
       # Cannot run grype container in GL CI (already DinD?)
       #- >
       #  podman run -it docker.io/anchore/grype:latest
       #  ${CI_REGISTRY_IMAGE}@${container_digest_arm64}
       #  > ./arm64-container-vulnerabilities-report-grype.txt
+    - |
       curl -sL https://api.github.com/repos/anchore/grype/releases | jq -r ".[].tag_name" | grep -v rc | sort -nr -t. -k 1 -k 2 -k 3 | head -n 1 | sed -E 's|^v||' > /tmp/grype-latest-branch-name
       export GRYPE_VERSION=$(cat /tmp/grype-latest-branch-name)
       curl -sL https://api.github.com/repos/anchore/syft/releases | jq -r ".[].tag_name" | grep -v rc | sort -nr -t. -k 1 -k 2 -k 3 | head -n 1 | sed -E 's|^v||' > /tmp/syft-latest-branch-name
@@ -131,8 +131,8 @@ scan-containers:
     - syft -v ${CI_REGISTRY_IMAGE}@${container_digest_arm64} -o json > ./arm64-container-sbom.json
     - syft -v ${CI_REGISTRY_IMAGE}@${container_digest_amd64} -o json > ./amd64-container-sbom.json
 
-    # - curl --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file ./arm64-container-vulnerabilities-report-grype-table.txt "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/reports/${tag}/arm64-container-vulnerabilities-report-grype-table.txt"
-    # - curl --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file ./amd64-container-vulnerabilities-report-grype-table.txt "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/reports/${tag}/amd64-container-vulnerabilities-report-grype-table.txt"
+    - curl --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file ./arm64-container-vulnerabilities-report-grype-table.txt "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/reports/${tag}/arm64-container-vulnerabilities-report-grype-table.txt"
+    - curl --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file ./amd64-container-vulnerabilities-report-grype-table.txt "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/reports/${tag}/amd64-container-vulnerabilities-report-grype-table.txt"
 
   artifacts:
     expose_as: 'Grype scanning reports'
