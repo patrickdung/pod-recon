@@ -3,6 +3,11 @@
 # Copyright (c) 2022 Patrick Dung
 
 ---
+
+.default_rules:
+  rules:
+    - if: $CI_COMMIT_BRANCH != "main" &&  ($CI_PIPELINE_SOURCE == 'push' || $CI_PIPELINE_SOURCE == 'merge_request_event' || $CI_PIPELINE_SOURCE == 'web') && $CI_COMMIT_BRANCH != ""
+
 # Use Fedora image for buildah/podman
 image: registry.fedoraproject.org/fedora:35
 stages:
@@ -27,7 +32,7 @@ variables:
   BUILDAH_FORMAT: 'docker'
   BUILDAH_ISOLATION: 'chroot'
   BASE_IMAGE: 'quay.io/almalinux/8-minimal:8.5'
-  #tag: "${CI_COMMIT_REF_SLUG}"
+  # ## tag: "${CI_COMMIT_REF_SLUG}"
   tag: "${CI_COMMIT_BRANCH}"
 
 before_script:
@@ -54,7 +59,7 @@ before_script:
 build-and-push:
   stage: build-and-push
   rules:
-    - if: $CI_COMMIT_BRANCH != "main" &&  ($CI_PIPELINE_SOURCE == 'push' || $CI_PIPELINE_SOURCE == 'merge_request_event' || $CI_PIPELINE_SOURCE == 'web')
+    - !reference [.default_rules, rules]
   script:
     # - buildah login -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}" "${CI_REGISTRY}"
     # Newer versions of podman/buildah configured overlayfs mount options when
@@ -118,7 +123,7 @@ build-and-push:
 scan-containers:
   stage: scan-containers
   rules:
-    - if: $CI_COMMIT_BRANCH != "main" &&  ($CI_PIPELINE_SOURCE == 'push' || $CI_PIPELINE_SOURCE == 'merge_request_event' || $CI_PIPELINE_SOURCE == 'web')
+    - !reference [.default_rules, rules]
   dependencies: ["build-and-push"]
   script:
 
@@ -182,8 +187,8 @@ release:
   dependencies: ["build-and-push", "scan-containers"]
   image: registry.gitlab.com/gitlab-org/release-cli:latest
   rules:
-    # - if: $CI_COMMIT_TAG
-    - if: $CI_COMMIT_BRANCH != "main" &&  ($CI_PIPELINE_SOURCE == 'push' || $CI_PIPELINE_SOURCE == 'merge_request_event' || $CI_PIPELINE_SOURCE == 'web')
+    # ## - if: $CI_COMMIT_TAG
+    - !reference [.default_rules, rules]
   before_script: []
   script:
     - echo "Running release job"
