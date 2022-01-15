@@ -117,6 +117,7 @@ build-and-push:
 
 scan-containers:
   stage: scan-containers
+  needs: ["build-and-push"]
   dependencies: ["build-and-push"]
   script:
 
@@ -177,6 +178,7 @@ scan-containers:
 
 release:
   stage: release
+  needs: ["build-and-push", "scan-containers"]
   dependencies: ["build-and-push", "scan-containers"]
   # image: registry.gitlab.com/gitlab-org/release-cli:latest
   rules:
