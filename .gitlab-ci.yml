@@ -24,7 +24,9 @@ variables:
   tag: "${CI_COMMIT_REF_SLUG}"
 
 before_script:
-  - dnf install -y --nodocs --setopt=install_weak_deps=False buildah podman skopeo runc qemu-user-binfmt jq curl
+  - >
+    dnf install -y --nodocs --setopt=install_weak_deps=False
+    buildah podman skopeo runc qemu-user-binfmt jq curl fuse-overlayfs
   # Newer versions of podman/buildah configured overlayfs mount options when
   # using the vfs driver, and this causes errors
   - sed -i '/^mountopt =.*/d' /etc/containers/storage.conf
