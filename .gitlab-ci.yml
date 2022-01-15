@@ -62,7 +62,9 @@ before_script:
     mkdir ~/.docker
     chmod 700 ~/.docker
     #cat ${XDG_RUNTIME_DIR}/containers/auth.json > ~/.docker/config.json
-    cat /run/user/0/podman/containers/auth.json > ~/.docker/config.json
+    # root / normal users seems to have different location
+    #cat /run/user/1000/podman/containers/auth.json > ~/.docker/config.json
+    cat /run/containers/0/auth.json > ~/.docker/config.json
 
 build-and-push:
   stage: build-and-push
