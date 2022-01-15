@@ -15,8 +15,9 @@ variables:
   # if use Docker
   # https://docs.gitlab.com/ee/ci/docker/using_docker_build.html#use-the-overlayfs-driver
   # DOCKER_DRIVER: overlay2
-  # But Buildah can't use 'overlay' driver when running inside docker
-  STORAGE_DRIVER: 'vfs'
+  # But Buildah can't use 'overlay' driver when running inside Docker
+  #STORAGE_DRIVER: 'vfs'
+  STORAGE_DRIVER: 'overlay'
   BUILDAH_FORMAT: 'docker'
   BUILDAH_ISOLATION: 'chroot'
   BASE_IMAGE: 'quay.io/almalinux/8-minimal:8.5'
@@ -61,6 +62,7 @@ build-and-push:
       buildah build-using-dockerfile --override-arch amd64
       --build-arg BASE_IMAGE="${BASE_IMAGE}"
       -t ${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}:${tag}-amd64
+
     - buildah manifest create ${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}:${tag}
     - >
       buildah manifest add ${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}:${tag}
@@ -72,10 +74,12 @@ build-and-push:
       buildah manifest push --all --format v2s2
       ${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}:${tag}
       docker://${CI_REGISTRY_IMAGE}:${tag}
+
     # - buildah inspect ${CI_REGISTRY_IMAGE}:${tag}
     - skopeo inspect --raw docker://${CI_REGISTRY_IMAGE}:${tag} | jq
     - skopeo inspect --raw docker://${CI_REGISTRY_IMAGE}:${tag} | jq -r '.manifests[] | select(.platform .architecture=="arm64" and .platform .os=="linux") | .digest' > ./container-digest-arm64
     - skopeo inspect --raw docker://${CI_REGISTRY_IMAGE}:${tag} | jq -r '.manifests[] | select(.platform .architecture=="amd64" and .platform .os=="linux") | .digest' > ./container-digest-amd64
+
     - ls -la
     - export container_digest_arm64=$(cat ./container-digest-arm64)
     - export container_digest_amd64=$(cat ./container-digest-amd64)
@@ -83,7 +87,7 @@ build-and-push:
     - echo ${container_digest_amd64}
 
   artifacts:
-    expire_in: 1 hour
+    # expire_in: 1 hour
     paths:
       - ./container-digest-arm64
       - ./container-digest-amd64
@@ -98,26 +102,33 @@ scan-containers:
   stage: scan-containers
   dependencies: ["build-and-push"]
   script:
+
     - export container_digest_arm64=$(cat ./container-digest-arm64)
     - export container_digest_amd64=$(cat ./container-digest-amd64)
+
       # The digest contains 'sha256:' in the beginning
       # Cannot run grype container in GL CI (already DinD?)
       #- >
       #  podman run -it docker.io/anchore/grype:latest
       #  ${CI_REGISTRY_IMAGE}@${container_digest_arm64}
       #  > ./arm64-container-vulnerabilities-report-grype.txt
+
     - |
       curl -sL https://api.github.com/repos/anchore/grype/releases | jq -r ".[].tag_name" | grep -v rc | sort -nr -t. -k 1 -k 2 -k 3 | head -n 1 | sed -E 's|^v||' > /tmp/grype-latest-branch-name
       export GRYPE_VERSION=$(cat /tmp/grype-latest-branch-name)
+    - |
       curl -sL https://api.github.com/repos/anchore/syft/releases | jq -r ".[].tag_name" | grep -v rc | sort -nr -t. -k 1 -k 2 -k 3 | head -n 1 | sed -E 's|^v||' > /tmp/syft-latest-branch-name
       export SYFT_VERSION=$(cat /tmp/syft-latest-branch-name)
 
-    # Install Grype and Syft
+    # Install Grype
     - |
       curl -L -O -v https://github.com/anchore/grype/releases/download/v${GRYPE_VERSION}/grype_${GRYPE_VERSION}_linux_amd64.rpm
       curl -L -O -v https://github.com/anchore/grype/releases/download/v${GRYPE_VERSION}/grype_${GRYPE_VERSION}_checksums.txt
       sha256sum -c grype_${GRYPE_VERSION}_checksums.txt --ignore-missing
       sudo rpm -ivh grype_${GRYPE_VERSION}_linux_amd64.rpm
+
+    # Install Syft
+    - |
       curl -L -O -v https://github.com/anchore/syft/releases/download/v${SYFT_VERSION}/syft_${SYFT_VERSION}_linux_amd64.rpm
       curl -L -O -v https://github.com/anchore/syft/releases/download/v${SYFT_VERSION}/syft_${SYFT_VERSION}_checksums.txt
       sha256sum -c syft_${SYFT_VERSION}_checksums.txt --ignore-missing
@@ -132,10 +143,12 @@ scan-containers:
     - syft -v ${CI_REGISTRY_IMAGE}@${container_digest_amd64} -o json > ./amd64-container-sbom.json
 
     - 'curl --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file ./arm64-container-vulnerabilities-report-grype-table.txt "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/reports/${tag}/arm64-container-vulnerabilities-report-grype-table.txt"'
-    - 'curl --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file ./amd64-container-vulnerabilities-report-grype-table.txt "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/reports/${tag}/amd64-container-vulnerabilities-report-grype-table.txt"'
+    - 'curl --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file ./arm64-container-vulnerabilities-report-grype-table.txt "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/reports/${tag}/arm64-container-vulnerabilities-report-grype-table.txt"'
+    - 'curl --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file ./amd64-container-sbom.json "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/reports/${tag}/amd64-container-sbom.json"'
+    - 'curl --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file ./arm64-container-sbom.json "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/reports/${tag}/arm64-container-sbom.json"'
 
   artifacts:
-    expose_as: 'Grype scanning reports'
+    expose_as: 'Grype scanning reports and SBOM'
     # Then can't use * when expose_as is used
     paths:
       - ./arm64-container-vulnerabilities-report-grype-table.txt
