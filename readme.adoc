@@ -1,11 +1,13 @@
 This repo is for building a Docker image
 for troubleshooting in container environments.
-All the tools should run as non-root.
-Below are some use cases for docker-compose.
+The contanier run as non-root by default.
+Some commands like tcpdump requires the container to run as root (Kubernetes).
+
+Below are some use cases for docker-compose and Kubernetes.
 Kubernetes would be similar but not totally the same.
 
 *Please be reminded about the security implications of the capabilities being granted.*
-I perform the testing with Podman and K3S.
+The testing is performed testing with Podman and K3S.
 
 . For using this image without any extra capabilities (as user "debug")
 .. traceroute -U / --udp
