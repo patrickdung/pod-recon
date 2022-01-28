@@ -89,3 +89,7 @@ I am not sure what it is difference from podman.
 * In the host server, use nsenter to run tcpdump inside the conatiner.
 * Check if the CNI expose an NIC on the host server, then run tcpdump on the host.
 * Using a sidecar container (Kubernetes) to run tcpdump.
+
+. Other tools included in the container image
+* A https://github.com/patrickdung/amicontained-build[custom build of amicontained],
+https://github.com/genuinetools/amicontained/[original project/repo]

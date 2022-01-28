@@ -39,6 +39,7 @@ RUN set -eux && \
       curl -L -O "${AMICONTAINED_BASE_URL}"/checksums.txt && \
       sha256sum --check --strict --ignore-missing checksums.txt && \
       rpm -ivh amicontained-build_"${AMICONTAINED_VERSION}"_linux_arm64.rpm; fi && \
+    rm -vf -- *.rpm checksums.txt && \
     groupadd \
       --gid 20000 \
       debug && \
