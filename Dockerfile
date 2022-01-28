@@ -5,6 +5,9 @@
 ARG BASE_IMAGE
 FROM ${BASE_IMAGE}
 
+ARG AMICONTAINED_VERSION
+ARG AMICONTAINED_BASE_URL
+
     # This image do not run as root
     # Not installed:
     # util-linux
@@ -25,6 +28,17 @@ RUN set -eux && \
       telnet socat jq wget bind-utils iperf3 nmap-ncat \
       tcpdump \
     && microdnf -y upgrade --nodocs && \
+    QUERY_ARCH=$(rpm -qf /lib64/libc.so.6 | awk -F\. '{print $NF}') && \
+    if [ "${QUERY_ARCH}" = "x86_64" ]; then \
+      curl -L -O "${AMICONTAINED_BASE_URL}"/amicontained-build_"${AMICONTAINED_VERSION}"_linux_amd64.rpm && \
+      curl -L -O "${AMICONTAINED_BASE_URL}"/checksums.txt && \
+      sha256sum --check --strict --ignore-missing checksums.txt && \
+      rpm -ivh amicontained-build_"${AMICONTAINED_VERSION}"_linux_amd64.rpm; fi && \
+    if [ "${QUERY_ARCH}" = "aarch64" ]; then \
+      curl -L -O "${AMICONTAINED_BASE_URL}"/amicontained-build_"${AMICONTAINED_VERSION}"_linux_arm64.rpm && \
+      curl -L -O "${AMICONTAINED_BASE_URL}"/checksums.txt && \
+      sha256sum --check --strict --ignore-missing checksums.txt && \
+      rpm -ivh amicontained-build_"${AMICONTAINED_VERSION}"_linux_arm64.rpm; fi && \
     groupadd \
       --gid 20000 \
       debug && \
