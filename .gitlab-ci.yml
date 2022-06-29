@@ -9,7 +9,7 @@
     - if: $CI_COMMIT_BRANCH != "main" &&  ($CI_PIPELINE_SOURCE == 'push' || $CI_PIPELINE_SOURCE == 'merge_request_event' || $CI_PIPELINE_SOURCE == 'web') && $CI_COMMIT_BRANCH
 
 # Use Fedora image for buildah/podman
-image: registry.fedoraproject.org/fedora:35
+image: registry.fedoraproject.org/fedora:36
 stages:
   - build-and-push
   - sign-containers
