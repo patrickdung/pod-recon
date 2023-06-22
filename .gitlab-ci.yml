@@ -9,7 +9,7 @@
     - if: $CI_COMMIT_BRANCH != "main" &&  ($CI_PIPELINE_SOURCE == 'push' || $CI_PIPELINE_SOURCE == 'merge_request_event' || $CI_PIPELINE_SOURCE == 'web') && $CI_COMMIT_BRANCH
 
 # Use Fedora image for buildah/podman
-image: registry.fedoraproject.org/fedora:36
+image: registry.fedoraproject.org/fedora:38
 stages:
   - build-and-push
   - sign-containers
@@ -33,8 +33,8 @@ variables:
   STORAGE_DRIVER: 'overlay'
   BUILDAH_FORMAT: 'docker'
   BUILDAH_ISOLATION: 'chroot'
-  # For Dockerfile that it is going to build, not the base image of the building CI
-  BASE_IMAGE: 'quay.io/almalinux/8-minimal:8.5'
+  # For Dockerfile that it is going to build, not the base image for the building CI
+  BASE_IMAGE: 'quay.io/almalinuxorg/9-minimal:9.2'
   # ## tag: "${CI_COMMIT_REF_SLUG}"
   tag: "${CI_COMMIT_BRANCH}"
 
