@@ -153,8 +153,10 @@ sign-containers:
 
     # Fetch the latest version of the applications
     - |
-      curl -sL https://api.github.com/repos/sigstore/cosign/releases | jq -r ".[].tag_name" | grep -v rc | sort -r -V | head -n 1 | sed -E 's|^v||' > /tmp/cosign-latest-branch-name
-      export COSIGN_VERSION=$(cat /tmp/cosign-latest-branch-name)
+      # Fixed cosign version as 1.13.1
+      #curl -sL https://api.github.com/repos/sigstore/cosign/releases | jq -r ".[].tag_name" | grep -v rc | sort -r -V | head -n 1 | sed -E 's|^v||' > /tmp/cosign-latest-branch-name
+      #export COSIGN_VERSION=$(cat /tmp/cosign-latest-branch-name)
+      export COSIGN_VERSION=1.13.1
 
     # Install Cosign
     - |
@@ -240,8 +242,10 @@ attest-sbom:
 
     # Fetch the latest version of the applications
     - |
-      curl -sL https://api.github.com/repos/sigstore/cosign/releases | jq -r ".[].tag_name" | grep -v rc | sort -r -V | head -n 1 | sed -E 's|^v||' > /tmp/cosign-latest-branch-name
-      export COSIGN_VERSION=$(cat /tmp/cosign-latest-branch-name)
+      # Fixed cosign version as 1.13.1
+      #curl -sL https://api.github.com/repos/sigstore/cosign/releases | jq -r ".[].tag_name" | grep -v rc | sort -r -V | head -n 1 | sed -E 's|^v||' > /tmp/cosign-latest-branch-name
+      #export COSIGN_VERSION=$(cat /tmp/cosign-latest-branch-name)
+      export COSIGN_VERSION=1.13.1
 
     # Install Cosign
     - |
