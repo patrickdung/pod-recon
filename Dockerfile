@@ -54,8 +54,8 @@ RUN set -eux && \
       debug && \
     mkdir -p /home/debug/bin && \
     chown -R debug:debug /home/debug && \
-    microdnf remove shadow-utils && \
-    microdnf clean all && \
+    microdnf -y remove shadow-utils && \
+    microdnf -y clean all && \
     rm -rf /var/cache/yum
 
 USER debug
