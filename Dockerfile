@@ -15,11 +15,12 @@ ARG AMICONTAINED_BASE_URL
     # ------
     # both unbound (for unbound-host) and bind-utils rpm dependency (python/pip/wheel)
 RUN set -eux && \
+    # in FC38, curl-minimal-7.76.1-23.el9.aarch64 conflicts with curl provided by curl-7.76.1-23.el9_2.1.aarch64 ?
     microdnf -y install --nodocs \
       --setopt="install_weak_deps=0" \
       --setopt="keepcache=0" --disablerepo="appstream" \
       shadow-utils tmux less \
-      ca-certificates iproute curl traceroute openssl \
+      ca-certificates iproute traceroute openssl \
       grep file gawk sed \
       iputils mtr \
     && microdnf -y install --nodocs \
