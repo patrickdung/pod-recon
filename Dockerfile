@@ -27,7 +27,7 @@ RUN set -eux && \
       --setopt="install_weak_deps=0" \
       --setopt="keepcache=0" \
       telnet socat jq wget bind-utils iperf3 nmap-ncat \
-      tcpdump \
+      tcpdump procps-ng findutils \
     && microdnf -y upgrade --nodocs && \
     QUERY_ARCH=$(rpm -qf /lib64/libc.so.6 | awk -F\. '{print $NF}') && \
     if [ "${QUERY_ARCH}" = "x86_64" ]; then \
