@@ -3,7 +3,7 @@
 version: "3.9"
 services:
   service-recon:
-    image: registry.gitlab.com/patrickdung/pod-recon:v0.1
+    image: registry.gitlab.com/patrickdung/pod-recon:v0.5
     #image: registry.gitlab.com/patrickdung/docker-images/pod-recon:0.1
     pull_policy: always
     container_name: "recon"
