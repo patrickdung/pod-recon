@@ -10,7 +10,7 @@
 
 # Use Fedora image for buildah/podman
 # image: registry.fedoraproject.org/fedora:39
-image: quay.io/fedora/fedora:41
+image: quay.io/fedora/fedora:42
 stages:
   - build-and-push
   - sign-containers
@@ -43,7 +43,7 @@ variables:
 before_script:
   - >
     dnf install -y --nodocs --setopt=install_weak_deps=False
-    buildah podman skopeo runc crun qemu-user-binfmt jq curl fuse-overlayfs
+    buildah podman skopeo runc crun qemu-user-binfmt jq curl fuse-overlayfs nftables
   # - sed -i '/^mountopt =.*/d' /etc/containers/storage.conf
   # Not sure why it won't take options from /etc/containers/containers.conf
   - |
