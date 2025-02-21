@@ -11,6 +11,7 @@
 # Use Fedora image for buildah/podman
 # image: registry.fedoraproject.org/fedora:39
 image: quay.io/fedora/fedora:42
+
 stages:
   - build-and-push
   - sign-containers
